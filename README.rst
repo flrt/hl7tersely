@@ -15,6 +15,10 @@ Install from pypi (https://pypi.python.org/pypi)
 
     pip install hl7tersely
 
+or with easy_install
+
+    easy_install hl7tersely
+
 Start playing
 -------------
 
@@ -40,5 +44,7 @@ Start playing
     >>> "MSH-4" in myhl7dict
     False
 
+
+Tested with Python 2.6, Python 2.7 and Python 3.2
 
 MIT Licensed
