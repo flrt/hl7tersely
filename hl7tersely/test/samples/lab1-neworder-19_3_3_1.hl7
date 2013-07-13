@@ -1,0 +1,10 @@
+MSH|^~\&|OP|Entero-gastric|OF|Chemistry|200309060820||OML^O21^OML_O21|msgOP123|T|2.5|123| |||USA||EN
+PID|1||12345^5^M10^Memphis_Hosp^PI||EVERYMAN^ADAM^^JR^^^L|19800101|M
+PV1|1|O|Ward|||||||||||||||12345
+ORC|NW|12345678^gastric||666^gastric|||||200309060710|222221^NURSE^NANCY|||||||||||Entero- gastric^^^^^^FI^^^EG02
+TQ1|||||||||A
+OBR||12345678^gastric||82951^Glucose Tolerance Test^C4||||||1234^BLEEDER| P|||||222222^PHYSICIAN^^^^DR|821
+OBX|1|NM|GLUCOSE||75|g|||||F|||200309060735
+SPM|1|123456781^gastric||SER|||||||P||||||200309060735|||||||||1
+SPM|2|123456782^gastric ||SER|||||||P||||||200309060755|||||||||1
+SPM|3|123456783^gastric ||SER|||||||P||||||200309060815|||||||||1
