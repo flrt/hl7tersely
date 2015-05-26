@@ -22,6 +22,21 @@ class HL7Parser:
     def __init__(self, terser_separator=TERSER_SEP):
         self.tersersep = terser_separator
         self.indexformat = "%02d"
+        self.segment_len = 3
+        self.separator_count = 5
+        self.header_segment = 'MSH'
+
+    def changeDefaultMessageConst(self, header_segment, segment_len, separator_count):
+        """
+        Provide a way to change default HL7 parameter if you want to subclass
+        :param header_segment: Expected segment, for HL7, it's MSH
+        :param segment_len: Expected length of segment, for HL7, it's 3
+        :param separator_count: Expected count of separators, for HL7, it's 5
+        :return: None
+        """
+        self.header_segment = header_segment
+        self.segment_len = segment_len
+        self.separator_count = separator_count
 
     def extractSeparators(self, hl7dict, msg):
         """ Read from the MSH (Message Header) the separators used to separate the pieces
@@ -34,10 +49,10 @@ class HL7Parser:
         See HL7 Chapter 2
 
         """
-        assert msg[:3] == "MSH", "Message MUST start with the MSH segment : Here %s" % msg[:3]
-        hl7dict.separators = msg[3:8]
+        assert msg[:self.segment_len] == self.header_segment, \
+            "Message MUST start with the %s segment : Here %s" % (self.header_segment, msg[:self.segment_len])
+        hl7dict.separators = msg[self.SEGMENT_LEN:self.SEGMENT_LEN+self.SEPARATOR_COUNT]
         # ['|', '^', '~', '\\', '&']
-
 
     def extractSubComponents(self, dictValues, terser, field):
         # extract sub components
@@ -79,11 +94,11 @@ class HL7Parser:
         # fields | separated by default
         fields = line.split(dictValues.separators[0])
 
-        if fields[0] == "MSH":
+        if fields[0] == self.header_segment:
             fields.insert(1, dictValues.separators[0])
 
         for index in range(1, len(fields)):
-            if len(fields) > 1 and fields[0] == "MSH" and index in (1, 2):
+            if len(fields) > 1 and fields[0] == self.header_segment and index in (1, 2):
                 self.emit(dictValues,  self.indexformat % index, fields[index])
             else:
                 self.extractOccurrences(dictValues,  self.indexformat % index, fields[index])
@@ -110,7 +125,7 @@ class HL7Parser:
         # walk the lines
         for line in lines:
             # get the segment name
-            name = line[:3]
+            name = line[:self.segment_len]
             # inc the segment count
             if name not in segmentNameCount:
                 segmentNameCount[name] = 1

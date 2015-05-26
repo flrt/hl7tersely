@@ -6,7 +6,7 @@ from hl7tersely.hl7parser import HL7Parser
 
 
 def loadFile(filename):
-    ab = os.path.abspath(sys.argv[0])
+    ab = os.path.abspath(__file__)
     with open(os.path.dirname(ab) + os.sep + "samples" + os.sep + filename, "r") as hl7f:
         data = hl7f.read()
     return data
