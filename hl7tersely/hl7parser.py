@@ -51,7 +51,7 @@ class HL7Parser:
         """
         assert msg[:self.segment_len] == self.header_segment, \
             "Message MUST start with the %s segment : Here %s" % (self.header_segment, msg[:self.segment_len])
-        hl7dict.separators = msg[self.SEGMENT_LEN:self.SEGMENT_LEN+self.SEPARATOR_COUNT]
+        hl7dict.separators = msg[self.segment_len:self.segment_len+self.separator_count]
         # ['|', '^', '~', '\\', '&']
 
     def extractSubComponents(self, dictValues, terser, field):
