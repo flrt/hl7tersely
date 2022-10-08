@@ -9,7 +9,7 @@ Use hl7dict as a python dictionary
 """
 
 __author__ = 'Frederic Laurent'
-__version__ = "1.0"
+__version__ = "1.3"
 __copyright__ = 'Copyright 2013, Frederic Laurent'
 __all__ = ["HL7Parser"]
 

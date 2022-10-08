@@ -42,7 +42,7 @@ import json
 import re
 
 __author__ = 'Frederic Laurent'
-__version__ = "1.0"
+__version__ = "1.3"
 __all__ = ["HL7Dict"]
 
 from collections import UserDict

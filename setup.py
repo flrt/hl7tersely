@@ -14,7 +14,7 @@ Released under MIT Licence.
 
 setup(
     name='hl7tersely',
-    version='1.2',
+    version='1.3',
     packages=['hl7tersely'],
     test_suite='hl7tersely.test',
     url='http://github.com/flrt/hl7tersely',
