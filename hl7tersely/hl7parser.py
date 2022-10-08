@@ -17,11 +17,14 @@ from hl7tersely.hl7dict import HL7Dict
 
 
 class HL7Parser:
+    """
+    indexformat : None (default) or "%02d" style for index in 01,02,etc. style
+    """
     TERSER_SEP = '-'
 
-    def __init__(self, terser_separator=TERSER_SEP):
+    def __init__(self, terser_separator=TERSER_SEP, indexformat=None):
         self.tersersep = terser_separator
-        self.indexformat = "%02d"
+        self.indexformat = indexformat
         self.segment_len = 3
         self.separator_count = 5
         self.header_segment = 'MSH'
@@ -62,7 +65,8 @@ class HL7Parser:
             self.emit(dictValues, terser, subcomponents[0])
         else:
             for index in range(len(subcomponents)):
-                self.emit(dictValues, terser + self.tersersep + self.indexformat % (index + 1), subcomponents[index])
+                idx = str(self.indexformat % (index + 1) if self.indexformat is not None else (index + 1))
+                self.emit(dictValues, terser + self.tersersep + idx, subcomponents[index])
 
     def extractComponents(self, dictValues, terser, field):
         # extract components
@@ -76,8 +80,8 @@ class HL7Parser:
         else:
             for index_compo in range(len(components)):
                 # extract sub components
-                self.extractSubComponents(dictValues, terser + self.tersersep + self.indexformat % (index_compo + 1),
-                                          components[index_compo])
+                idx = str(self.indexformat % (index_compo + 1) if self.indexformat is not None else (index_compo + 1))
+                self.extractSubComponents(dictValues, terser + self.tersersep + idx, components[index_compo])
 
     def extractOccurrences(self, dictValues, terser, field):
         # extract occurrences separated by ~ character by default
@@ -86,7 +90,8 @@ class HL7Parser:
         for index_occu in range(len(occurrences)):
             parent = terser
             if len(occurrences) > 1:
-                parent += '[' + "%02d" % (index_occu + 1) + ']'
+                idx = str(self.indexformat % (index_occu + 1) if self.indexformat is not None else (index_occu+1))
+                parent += f'[{idx}]'
             # get the components inside
             self.extractComponents(dictValues, parent, occurrences[index_occu])
 
@@ -98,10 +103,12 @@ class HL7Parser:
             fields.insert(1, dictValues.separators[0])
 
         for index in range(1, len(fields)):
+            idx = str(self.indexformat % index if self.indexformat is not None else index)
+
             if len(fields) > 1 and fields[0] == self.header_segment and index in (1, 2):
-                self.emit(dictValues,  self.indexformat % index, fields[index])
+                self.emit(dictValues,  idx, fields[index])
             else:
-                self.extractOccurrences(dictValues,  self.indexformat % index, fields[index])
+                self.extractOccurrences(dictValues,  idx, fields[index])
 
     def emit(self, dictValues, key, value):
         """A new value has been found. This couple : key,value is emitted, and store in the HL7 dictionary.
@@ -119,25 +126,25 @@ class HL7Parser:
         SPM[2] is the second SPM segment.
 
         """
-        lineMap = ['']
-        segmentNameCount = {}
+        line_map = ['']
+        segment_name_count = {}
 
         # walk the lines
         for line in lines:
             # get the segment name
             name = line[:self.segment_len]
             # inc the segment count
-            if name not in segmentNameCount:
-                segmentNameCount[name] = 1
+            if name not in segment_name_count:
+                segment_name_count[name] = 1
             else:
-                segmentNameCount[name] += 1
+                segment_name_count[name] += 1
 
-            qualifiedSegmentName = "%s[%d]" % (name, segmentNameCount[name])
-            lineMap.append(qualifiedSegmentName)
+            qualifiedSegmentName = "%s[%d]" % (name, segment_name_count[name])
+            line_map.append(qualifiedSegmentName)
 
         # return the list of qualified segment name
         # ['', 'MSH[1]', 'PID[1]', 'PV1[1]', 'ORC[1]', 'OBR[1]', 'TQ1[1]', 'OBX[1]', 'SPM[1]', ...
-        return segmentNameCount, lineMap
+        return segment_name_count, line_map
 
     def parse(self, msg):
         """ Parse an HL7 message and return an HL7 dictionary.
@@ -153,16 +160,16 @@ class HL7Parser:
         self.extractSeparators(dictValues, msg_)
         msg_ = msg_.replace('\r', '\n')
         lines = msg_.split('\n')
-        lineNumber = 1
+        line_number = 1
 
         # build the map of segments
-        segmentNameCount, lineMap = self.buildSegmentMap(lines)
-        dictValues.setSegmentsMap(segmentNameCount, lineMap)
+        segment_name_count, line_map = self.buildSegmentMap(lines)
+        dictValues.setSegmentsMap(segment_name_count, line_map)
 
         # Parse each line of the message : 1 line = 1 segment
         for line in lines:
-            dictValues.currentLineNumber = lineNumber
+            dictValues.currentLineNumber = line_number
             self.extractValues(dictValues, line)
-            lineNumber += 1
+            line_number += 1
 
         return dictValues

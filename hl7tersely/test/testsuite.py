@@ -42,28 +42,16 @@ class TerserTest(unittest.TestCase):
         segs_ = hl7d.getSegmentsList()
         self.assertEqual(len(segs_), 8, "Error - the HL7 test file Lab1 New Order contains 8 segments")
    
-        if sys.version_info > (2,7):
-            self.assertIn("MSH", segs_, "Error - the MSH segment is missing")
-            self.assertIn("PID", segs_, "Error - the PID segment is missing")
-            self.assertIn("PV1", segs_, "Error - the PV1 segment is missing")
-            self.assertIn("ORC", segs_, "Error - the ORC segment is missing")
-            self.assertIn("TQ1", segs_, "Error - the TQ1 segment is missing")
-            self.assertIn("OBR", segs_, "Error - the TQ1 segment is missing")
-            self.assertIn("OBX", segs_, "Error - the TQ1 segment is missing")
-            self.assertIn("SPM", segs_, "Error - the SPM segment is missing")
+        self.assertTrue("MSH" in segs_, "Error - the MSH segment is missing")
+        self.assertTrue("PID" in segs_, "Error - the PID segment is missing")
+        self.assertTrue("PV1" in segs_, "Error - the PV1 segment is missing")
+        self.assertTrue("ORC" in segs_, "Error - the ORC segment is missing")
+        self.assertTrue("TQ1" in segs_, "Error - the TQ1 segment is missing")
+        self.assertTrue("OBR" in segs_, "Error - the TQ1 segment is missing")
+        self.assertTrue("OBX" in segs_, "Error - the TQ1 segment is missing")
+        self.assertTrue("SPM" in segs_, "Error - the SPM segment is missing")
 
-            self.assertGreater(len(hl7d.keys()), 0, "ERR")
-        else:
-            self.assertTrue("MSH" in segs_, "Error - the MSH segment is missing")
-            self.assertTrue("PID" in segs_, "Error - the PID segment is missing")
-            self.assertTrue("PV1" in segs_, "Error - the PV1 segment is missing")
-            self.assertTrue("ORC" in segs_, "Error - the ORC segment is missing")
-            self.assertTrue("TQ1" in segs_, "Error - the TQ1 segment is missing")
-            self.assertTrue("OBR" in segs_, "Error - the TQ1 segment is missing")
-            self.assertTrue("OBX" in segs_, "Error - the TQ1 segment is missing")
-            self.assertTrue("SPM" in segs_, "Error - the SPM segment is missing")
-
-            self.assertTrue(len(hl7d.keys()) > 0, "ERR")
+        self.assertTrue(len(hl7d.keys()) > 0, "ERR")
 
 
     def test_segcount_lab3(self):
@@ -74,16 +62,28 @@ class TerserTest(unittest.TestCase):
     def test_getvalues_lab3(self):
         hl7p = HL7Parser()
         hl7d = hl7p.parse(self.lab3StatusChanged)
-        #print(hl7d.toString())
 
         self.assertEqual(hl7d.get("ORC-10-2"), "NURSE", "Error - Terser not found")
-        self.assertEqual(hl7d.get("ORC[1]-10-02"), "NURSE", "Error - Terser not found")
-        self.assertEqual(hl7d.get("SPM[1]-02-03"), None, "Error - Terser does not exists")
+        self.assertEqual(hl7d.get("ORC[1]-10-2"), "NURSE", "Error - Terser not found")
+        self.assertEqual(hl7d.get("SPM[1]-02-3"), None, "Error - Terser does not exists")
+
+    def test_getvalues_lab3_dotnotation(self):
+        hl7p = HL7Parser(terser_separator='.')
+        hl7d = hl7p.parse(self.lab3StatusChanged)
+
+        self.assertEqual(hl7d.get("ORC.10.2"), "NURSE", "Error - Terser not found")
+        self.assertEqual(hl7d.get("ORC[1].10.2"), "NURSE", "Error - Terser not found")
+        self.assertEqual(hl7d.get("SPM[1].2.3"), None, "Error - Terser does not exists")
 
     def test_tersersep_lab3(self):
         hl7p = HL7Parser(terser_separator='_')
         hl7d = hl7p.parse(self.lab3StatusChanged)
         self.assertEqual(hl7d.get('OBR_16_2'), 'PHYSICIAN', 'Error - Terser separator replacement issue')
+
+    def test_tersersep_lab3_2decimal(self):
+        hl7p = HL7Parser(terser_separator='_', indexformat="%02d")
+        hl7d = hl7p.parse(self.lab3StatusChanged)
+        self.assertEqual(hl7d.get('OBR[1]_16_02'), 'PHYSICIAN', 'Error - Terser separator replacement issue')
 
     def test_commondict_lab3(self):
         hl7p = HL7Parser()
@@ -94,21 +94,16 @@ class TerserTest(unittest.TestCase):
         for qk in qualified_keys:
             self.assertTrue(qk in aliased_keys)
 
-        if sys.version_info > (2, 7):
-            self.assertIn("MSH-9-3", hl7d, "Error : MSH-9-3 must be in LAB3 message")
-            self.assertIn("MSH[1]-09-03", hl7d, "Error : MSH[1]-09-03 must be in LAB3 message")
-            self.assertNotIn("MSH-18", hl7d, "Error : MSH-18 must not be in LAB3 message")
-        else:
-            self.assertTrue("MSH-9-3" in hl7d, "Error : MSH-9-3 must be in LAB3 message")
-            self.assertTrue("MSH[1]-09-03" in hl7d, "Error : MSH[1]-09-03 must be in LAB3 message")
-            self.assertFalse("MSH-18" in hl7d, "Error : MSH-18 must not be in LAB3 message")
+        self.assertTrue("MSH-9-3" in hl7d, "Error : MSH-9-3 must be in LAB3 message")
+        self.assertTrue("MSH[1]-9-3" in hl7d, "Error : MSH[1]-9-3 must be in LAB3 message")
+        self.assertFalse("MSH-18" in hl7d, "Error : MSH-18 must not be in LAB3 message")
 
         self.assertEqual("MSH-18" not in hl7d, True, "Error : MSH-18 must not be in LAB3 message")
 
         self.assertEqual(hl7d["MSH-9-3"], hl7d.get("MSH-9-3"), "Error : both get method must return same result")
         self.assertEqual(hl7d["MSH-9-3"], "ORU_R01", "Error : both get method must return same result")
-        self.assertEqual(hl7d["MSH-9-3"], hl7d.get("MSH[1]-09-03"), "Error : both get method must return same result")
-        self.assertEqual(hl7d["MSH[1]-09-03"], hl7d.get("MSH-9-3"), "Error : both get method must return same result")
+        self.assertEqual(hl7d["MSH-9-3"], hl7d.get("MSH[1]-9-3"), "Error : both get method must return same result")
+        self.assertEqual(hl7d["MSH[1]-9-3"], hl7d.get("MSH-9-3"), "Error : both get method must return same result")
 
         if sys.version_info > (2, 7):
             self.assertIsNone(hl7d["MSH-18"], "Error : MSH-18 must not be in LAB3 message. Get must return None")

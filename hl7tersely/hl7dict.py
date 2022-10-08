@@ -45,17 +45,14 @@ __author__ = 'Frederic Laurent'
 __version__ = "1.0"
 __all__ = ["HL7Dict"]
 
-try:
-    # python 2
-    from UserDict import UserDict
-except:
-    # python 3
-    from collections import UserDict
+from collections import UserDict
 
 
 class HL7Dict(UserDict):
     def __init__(self, terser_separator="-"):
         UserDict.__init__(self)
+        self.lineMap = None
+        self.segmentNameCount = None
         self.sep = terser_separator
         self.orderedKeys = []
         self.aliasKeys = {}
@@ -66,24 +63,23 @@ class HL7Dict(UserDict):
     def __setitem__(self, key, item):
         # get the qualified name of the segment of current line
         # eg. PID[1] or MSH[1]
-        segName = self.lineMap[self.currentLineNumber]
+        seg_name = self.lineMap[self.currentLineNumber]
 
         # build the qualified name and store (ex : MSH[1]-09-01)
-        qualName = "%s%s%s" % (segName, self.sep, key)
-        self.orderedKeys.append(qualName)
-        self.data[qualName] = item
+        qual_name = f"{seg_name}{self.sep}{key}"
+        self.orderedKeys.append(qual_name)
+        self.data[qual_name] = item
 
         # build alias
         # MSH[1]-09-01 is aliased MSH-9-1
         # SPM[2]-01 is aliased SPM[2]-1
 
-        if segName in self.aliasSegmentName:
-            aliasName = "%s%s%s" % (self.aliasSegmentName[segName], self.sep, self.reZeroLeft.sub("\\1", key))
-        else:
-            aliasName = "%s%s%s" % (segName, self.sep, self.reZeroLeft.sub("\\1", key))
+        seg = self.aliasSegmentName[seg_name] if seg_name in self.aliasSegmentName else seg_name
+        trail = self.reZeroLeft.sub('\\1', key)
+        alias_name = f"{seg}{self.sep}{trail}"
 
-        self.aliasKeys[aliasName] = qualName
-        self.aliasKeys[qualName] = aliasName
+        self.aliasKeys[alias_name] = qual_name
+        self.aliasKeys[qual_name] = alias_name
 
     def __contains__(self, key):
         return key in self.aliasKeys
@@ -173,9 +169,9 @@ class HL7Dict(UserDict):
         self.segmentNameCount = segmentNameCount
         self.lineMap = lineMap
 
-        #Build an alias map for simplicity in get
+        # Build an alias map for simplicity in get
         # PID is an alias of PID[1] if only 1 PID segment is present
-        for segName in segmentNameCount.keys():
-            if segmentNameCount[segName] == 1:
-                self.aliasSegmentName[segName] = segName+"[1]"
-                self.aliasSegmentName[segName+"[1]"] = segName
+        for seg_name in segmentNameCount.keys():
+            if segmentNameCount[seg_name] == 1:
+                self.aliasSegmentName[seg_name] = seg_name + "[1]"
+                self.aliasSegmentName[seg_name + "[1]"] = seg_name
